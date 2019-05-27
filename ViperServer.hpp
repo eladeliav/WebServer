@@ -6,6 +6,7 @@
 #define WEBSERVER_VIPERSERVER_HPP
 
 #include <string>
+#include <fstream>
 #include <UniSockets/UniSocket.hpp>
 
 using std::string;
@@ -19,17 +20,32 @@ public:
         string method;
         string path;
         string status;
-        string response;
+        char* response;
     };
-    typedef void(*request_handler_func) (http_request);
-    ViperServer(unsigned int listenPort, request_handler_func r);
+
+    ViperServer(unsigned int listenPort);
+
     void shutdownServer();
-    static std::string ExtractPath(const std::string& url);
+
 private:
 
-    static void GetRequest(UniSocket& sock);
-    request_handler_func request_handler;
+    static void getRequest(UniSocket &sock);
+
     bool closeFlag = false;
+
+    static std::string extractPath(const std::string &url);
+
+    static bool getFileData(const std::string &path, void *buf, int *size);
+
+    static std::string getFileExtension(const std::string &path);
+
+    static std::string getContentType(const std::string &path);
+
+    static inline bool validFile (const std::string& name) {
+        std::ifstream f(name.c_str());
+        return f.good();
+    }
+
 };
 
 
