@@ -20,7 +20,7 @@ public:
         string method;
         string path;
         string status;
-        char* response;
+        string response;
     };
 
     ViperServer(unsigned int listenPort);
@@ -35,16 +35,19 @@ private:
 
     static std::string extractPath(const std::string &url);
 
-    static bool getFileData(const std::string &path, void *buf, int *size);
+    static bool getFileData(const std::string &path, string &response, int *size);
 
     static std::string getFileExtension(const std::string &path);
 
     static std::string getContentType(const std::string &path);
 
-    static inline bool validFile (const std::string& name) {
+    static inline bool validFile(const std::string &name)
+    {
         std::ifstream f(name.c_str());
         return f.good();
     }
+
+    static std::ofstream logF;
 
 };
 

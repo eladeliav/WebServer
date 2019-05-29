@@ -5,8 +5,8 @@
 # log files or other utilities, for educational purpose
 # Usage: Fill the missing functions and constants
 
-import socket
 import os.path
+import socket
 
 IP = "0.0.0.0"
 PORT = 8080
@@ -118,7 +118,7 @@ def handle_client(client_socket):
     Handles client requests: verifies client's requests are legal HTTP,
     calls function to handle the requests
     """
-    print 'Client connected\n' # <-- TODO UNCOMMENT
+    print 'Client connected\n'  # <-- TODO UNCOMMENT
     stay_on_client = True
     while stay_on_client:
         try:
@@ -134,7 +134,7 @@ def handle_client(client_socket):
             print 'Error: Not a valid HTTP request'
             break
         # break   # <-- TODO COMMENT
-    print 'Closing connection\n' # <-- TODO UNCOMMENT
+    print 'Closing connection\n'  # <-- TODO UNCOMMENT
     client_socket.close()
 
 
@@ -157,7 +157,7 @@ def main():
 
     while True:
         client_socket, client_address = server_socket.accept()
-        print 'New connection received' #<-- TODO UNCOMMENT
+        print 'New connection received'  # <-- TODO UNCOMMENT
         client_socket.settimeout(SOCKET_TIMEOUT)
         try:
             handle_client(client_socket)
