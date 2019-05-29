@@ -13,6 +13,8 @@
 #include <algorithm>
 #include "ViperServer.hpp"
 
+#define GET "GET"
+#define POST "POST"
 #define NEW_LINE "\r\n"
 #define NO_PATH "/"
 #define HTTP_PLAIN "text/plain"
@@ -27,7 +29,7 @@ using std::vector;
 
 static const vector<string> TEXT_TYPES = {"html", "txt", "php"};
 static const vector<string> IMAGE_TYPES = {"jpg", "ico", "gif", "png", "jfif", "svg"};
-static const vector<string> JS_TYPES = {"js", "min.js"};
+static const vector<string> JS_TYPES = {"js"};
 static const vector<string> CSS_TYPES = {"css", "sass"};
 
 static const std::map<vector<string>, string> TYPE_MAP = {
@@ -37,7 +39,7 @@ static const std::map<vector<string>, string> TYPE_MAP = {
         {CSS_TYPES,   "text/css"}
 };
 
-std::ofstream ViperServer::logF = std::ofstream("log.txt");
+std::ofstream ViperServer::logF = std::ofstream("log.txt", std::ios::out);
 
 template<typename T>
 bool existsInVector(const vector<T> vec, T d)
@@ -72,15 +74,20 @@ void ViperServer::getRequest(UniSocket sock)
     }
     string line = buf;
 
+    ViperServer::logF << line;
+
     if (line.empty())
         return;
 
     http_request request;
 
-    if (line.find("GET") == 0)
+    if (line.find(GET) == 0)
     {
-        request.method = "GET";
-    } else
+        request.method = GET;
+    } else if(line.find(POST) == 0)
+    {
+        request.method = POST;
+    }else
         return;
 
     //TODO: make case for other methods
@@ -134,7 +141,6 @@ void ViperServer::getRequest(UniSocket sock)
     if (sock.raw_send(response.str().c_str(), response.str().length()) <= 0)
         std::cout << "had send error" << std::endl;
 
-    ViperServer::logF << response.str();
 }
 
 void ViperServer::shutdownServer()
@@ -173,7 +179,7 @@ ViperServer::ViperServer(unsigned int listenPort)
         currentThread.detach(); //detach thread
         allThreads.push_back(std::move(currentThread)); // move thread to vector
     }
-
+    serverSock.close();
 }
 
 bool ViperServer::getFileData(const std::string &path, string &response, int *size)

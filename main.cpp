@@ -10,6 +10,5 @@ int main()
     {
         std::cout << e << std::endl;
     }
-
     return 0;
 }
