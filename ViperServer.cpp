@@ -16,8 +16,8 @@
 #define NEW_LINE "\r\n"
 #define NO_PATH "/"
 #define HTTP_PLAIN "text/plain"
-#define WEBROOT_PATH "D:\\Programming\\Websites\\History Project 2017\\"
-#define DEFAULT_PATH "D:\\Programming\\Websites\\History Project 2017\\index.html"
+#define WEBROOT_PATH "../webroot"
+#define DEFAULT_PATH "../webroot/index.html"
 
 
 using std::string;
@@ -59,7 +59,7 @@ std::string ViperServer::extractPath(const std::string &url)
     return path;
 }
 
-void ViperServer::getRequest(UniSocket &sock)
+void ViperServer::getRequest(UniSocket sock)
 {
     char buf[BUFFER_LEN];
     try
@@ -101,9 +101,6 @@ void ViperServer::getRequest(UniSocket &sock)
     request.status = "202 OK";
     request.sock = sock;
     request.path = path_to_file;
-
-
-    //request_handler(request);
 
     time_t ltime;
     time(&ltime);
@@ -158,28 +155,25 @@ void joinThreads(vector<std::thread> &vec)
 
 ViperServer::ViperServer(unsigned int listenPort)
 {
-    UniSocket serverSock(listenPort, SOMAXCONN);
-    ViperServer::logF << "LOG";
-    static UniSocket current;
-    static std::vector<std::thread> allThreads;
-    std::thread currentThread;
-    while (!this->closeFlag)
+    UniSocket serverSock(listenPort, SOMAXCONN); // declaring listening socket
+    static UniSocket current; // empty current socket
+    static std::vector<std::thread> allThreads; // empty vector for threads
+    std::thread currentThread; //empty thread
+    while (!this->closeFlag) // whilte running
     {
         try
         {
-            current = serverSock.accept();
+            current = serverSock.accept(); // use current to save new accepted socket
         } catch (UniSocketException &e)
         {
             std::cout << e << std::endl;
             continue;
         }
-        currentThread = std::thread(getRequest, std::ref(current));
-        currentThread.detach();
-        allThreads.push_back(std::move(currentThread));
-        //getRequest(current);
-        //allThreads.push_back(std::thread(getRequest, std::ref(current)));
+        currentThread = std::thread(getRequest, current); // pass new accepted socket to handleRequest on thread
+        currentThread.detach(); //detach thread
+        allThreads.push_back(std::move(currentThread)); // move thread to vector
     }
-    joinThreads(allThreads);
+
 }
 
 bool ViperServer::getFileData(const std::string &path, string &response, int *size)

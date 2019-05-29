@@ -9,18 +9,16 @@
 #include <fstream>
 #include <UniSockets/UniSocket.hpp>
 
-using std::string;
-
 class ViperServer
 {
 public:
     struct http_request
     {
         UniSocket sock;
-        string method;
-        string path;
-        string status;
-        string response;
+        std::string method;
+        std::string path;
+        std::string status;
+        std::string response;
     };
 
     ViperServer(unsigned int listenPort);
@@ -29,13 +27,13 @@ public:
 
 private:
 
-    static void getRequest(UniSocket &sock);
+    static void getRequest(UniSocket sock);
 
     bool closeFlag = false;
 
     static std::string extractPath(const std::string &url);
 
-    static bool getFileData(const std::string &path, string &response, int *size);
+    static bool getFileData(const std::string &path, std::string &response, int *size);
 
     static std::string getFileExtension(const std::string &path);
 
