@@ -1,0 +1,3 @@
+[submodule "UniSockets"]
+	path = UniSockets
+	url = https://github.com/eladeliav/UniSockets
