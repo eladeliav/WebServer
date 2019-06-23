@@ -27,7 +27,7 @@ public:
 
 private:
 
-    static void getRequest(UniSocket sock);
+    static void handleClient(UniSocket sock);
 
     bool closeFlag = false;
 

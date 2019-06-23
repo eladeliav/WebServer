@@ -17,10 +17,10 @@
 #define POST "POST"
 #define NEW_LINE "\r\n"
 #define NO_PATH "/"
-#define HTTP_PLAIN "text/plain"
-#define WEBROOT_PATH "../webroot"
-#define DEFAULT_PATH "../webroot/index.html"
-
+#define HTTP_PLAIN "text/html"
+#define WEBROOT_PATH "D:\\Programming\\Websites\\elastic-search-viewer\\build"
+#define DEFAULT_PATH "D:\\Programming\\Websites\\elastic-search-viewer\\build\\index.html"
+#define LOG(x) std::cout << x << std::endl
 
 using std::string;
 using std::vector;
@@ -30,13 +30,15 @@ using std::vector;
 static const vector<string> TEXT_TYPES = {"html", "txt", "php"};
 static const vector<string> IMAGE_TYPES = {"jpg", "ico", "gif", "png", "jfif", "svg"};
 static const vector<string> JS_TYPES = {"js"};
+static const vector<string> JSON_TYPES = {"json", "map"};
 static const vector<string> CSS_TYPES = {"css", "sass"};
 
 static const std::map<vector<string>, string> TYPE_MAP = {
         {TEXT_TYPES,  "text/html; charset=utf-8"},
         {IMAGE_TYPES, "image/jpeg"},
         {JS_TYPES,    "application/javascript"},
-        {CSS_TYPES,   "text/css"}
+        {CSS_TYPES,   "text/css"},
+        {JSON_TYPES, "application/json"}
 };
 
 std::ofstream ViperServer::logF = std::ofstream("log.txt", std::ios::out);
@@ -61,7 +63,7 @@ std::string ViperServer::extractPath(const std::string &url)
     return path;
 }
 
-void ViperServer::getRequest(UniSocket sock)
+void ViperServer::handleClient(UniSocket sock)
 {
     char buf[BUFFER_LEN];
     try
@@ -141,6 +143,7 @@ void ViperServer::getRequest(UniSocket sock)
     if (sock.raw_send(response.str().c_str(), response.str().length()) <= 0)
         std::cout << "had send error" << std::endl;
 
+    sock.close();
 }
 
 void ViperServer::shutdownServer()
@@ -148,23 +151,13 @@ void ViperServer::shutdownServer()
     this->closeFlag = false;
 }
 
-void joinThreads(vector<std::thread> &vec)
-{
-    for (auto &t : vec)
-    {
-        if (t.joinable())
-        {
-            t.join();
-        }
-    }
-}
-
 ViperServer::ViperServer(unsigned int listenPort)
 {
     UniSocket serverSock(listenPort, SOMAXCONN); // declaring listening socket
-    static UniSocket current; // empty current socket
-    static std::vector<std::thread> allThreads; // empty vector for threads
-    std::thread currentThread; //empty thread
+    LOG("Listening for connections on port: " << listenPort);
+    LOG("Running on: http://localhost:" << listenPort);
+    UniSocket current; // empty current socket
+    std::vector<std::thread> allThreads; // empty vector for threads
     while (!this->closeFlag) // whilte running
     {
         try
@@ -175,9 +168,11 @@ ViperServer::ViperServer(unsigned int listenPort)
             std::cout << e << std::endl;
             continue;
         }
-        currentThread = std::thread(getRequest, current); // pass new accepted socket to handleRequest on thread
-        currentThread.detach(); //detach thread
-        allThreads.push_back(std::move(currentThread)); // move thread to vector
+        LOG("New Connection");
+//        std::thread newThread = std::thread(handleClient, current);
+//        newThread.detach();
+//        allThreads.push_back(std::move(newThread));
+        handleClient(current);
     }
     serverSock.close();
 }
