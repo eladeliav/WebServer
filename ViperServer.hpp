@@ -14,11 +14,23 @@ class ViperServer
 public:
     struct http_request
     {
-        UniSocket sock;
         std::string method;
         std::string path;
         std::string status;
-        std::string response;
+        bool close;
+    };
+
+    struct http_response
+    {
+        std::string version;
+        std::string status;
+        std::string date;
+        std::string server;
+        std::string content_type;
+        int content_length;
+        std::string content;
+        bool close;
+        std::string str();
     };
 
     ViperServer(unsigned int listenPort);
@@ -30,6 +42,10 @@ private:
     static void handleClient(UniSocket sock);
 
     bool closeFlag = false;
+
+    static http_request parseRequest(const std::string& raw_req);
+
+    static ViperServer::http_response generateResponse(const http_request& req);
 
     static std::string extractPath(const std::string &url);
 
