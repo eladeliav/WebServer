@@ -76,7 +76,7 @@ void ViperServer::handleClient(UniSocket sock)
     }
     string line = buf;
 
-    ViperServer::logF << line;
+    ViperServer::logF << "REQUEST:\n"<< line << "\n";
 
     if (line.empty())
         return;
@@ -139,11 +139,10 @@ void ViperServer::handleClient(UniSocket sock)
     response << "Content-Length: " + std::to_string(contentLength) + NEW_LINE + NEW_LINE;
     response << request.response;
 
+    ViperServer::logF << "RESPONSE:\n" << response.str() << "\n";
     std::cout << "Sending over: " << path_to_file << " with content of type: " << contentType << std::endl;
     if (sock.raw_send(response.str().c_str(), response.str().length()) <= 0)
         std::cout << "had send error" << std::endl;
-
-    sock.close();
 }
 
 void ViperServer::shutdownServer()
@@ -168,7 +167,7 @@ ViperServer::ViperServer(unsigned int listenPort)
             std::cout << e << std::endl;
             continue;
         }
-        LOG("New Connection");
+        LOG("New Request");
 //        std::thread newThread = std::thread(handleClient, current);
 //        newThread.detach();
 //        allThreads.push_back(std::move(newThread));
