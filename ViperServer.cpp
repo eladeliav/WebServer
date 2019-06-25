@@ -109,7 +109,7 @@ ViperServer::http_request ViperServer::parseRequest(const std::string &raw_req)
 
     //TODO: make case for other methods
 
-    string path_to_file = ViperServer::extractPath(raw_req);
+    std::string path_to_file = ViperServer::extractPath(raw_req);
 
     if (path_to_file == NO_PATH)
         path_to_file = DEFAULT_PATH;
