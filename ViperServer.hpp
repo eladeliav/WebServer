@@ -14,6 +14,7 @@ class ViperServer
 public:
     struct http_request
     {
+        http_request() : close(false) { }
         std::string method;
         std::string path;
         std::string status;
@@ -22,6 +23,7 @@ public:
 
     struct http_response
     {
+        http_response() : close(false) { }
         std::string version;
         std::string status;
         std::string date;

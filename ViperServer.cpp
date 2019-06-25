@@ -79,7 +79,7 @@ ViperServer::http_response ViperServer::generateResponse(const ViperServer::http
     response.version = VERSION;
     response.server = SERVER_NAME;
     response.close = req.close;
-    response.status = "200 OK";
+    response.status = req.status;
 
     if (!getFileData(req.path, response.content, &response.content_length))
     {
@@ -128,7 +128,7 @@ ViperServer::http_request ViperServer::parseRequest(const std::string &raw_req)
     std::string connectionLine = raw_req.substr(raw_req.find("Connection: ") + 12);
     connectionLine = connectionLine.substr(0, connectionLine.find('\n'));
     request.close = connectionLine == "Close";
-    request.status = "202 OK";
+    request.status = "200 OK";
     request.path = path_to_file;
     return request;
 }
