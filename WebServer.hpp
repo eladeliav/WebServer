@@ -15,7 +15,9 @@ class WebServer
 public:
     struct http_request
     {
-        http_request() : close(false) { }
+        http_request() : close(false)
+        {}
+
         std::string method;
         std::string path;
         std::string status;
@@ -24,7 +26,9 @@ public:
 
     struct http_response
     {
-        http_response() : close(false) { }
+        http_response() : close(false)
+        {}
+
         std::string version;
         std::string status;
         std::string date;
@@ -33,7 +37,9 @@ public:
         int content_length;
         std::string content;
         bool close;
+
         std::string str();
+
         std::string strHeaders();
     };
 
@@ -46,10 +52,9 @@ private:
     static void handleClient(UniSocket sock, bool &closeFlag);
 
 
+    static http_request parseRequest(const std::string &raw_req);
 
-    static http_request parseRequest(const std::string& raw_req);
-
-    static WebServer::http_response generateResponse(const http_request& req);
+    static WebServer::http_response generateResponse(const http_request &req);
 
     static std::string extractPath(const std::string &url);
 
@@ -64,6 +69,7 @@ private:
         std::ifstream f(name.c_str());
         return f.good();
     }
+
 private:
     static std::ofstream logF;
     bool closeFlag = false;

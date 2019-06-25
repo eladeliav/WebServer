@@ -20,7 +20,7 @@
 #define HTTP_PLAIN "text/html"
 #define WEBROOT_PATH "D:\\Programming\\Websites\\elastic-search-viewer\\build"
 #define DEFAULT_PATH "D:\\Programming\\Websites\\elastic-search-viewer\\build\\index.html"
-#define LOG(x) std::cout << x << std::endl
+#define LOG(x) (std::cout << x << std::endl)
 #define VERSION "HTTP/1.1"
 #define SERVER_NAME "Viper WebServer V1.0"
 #define TIMEOUT 1
@@ -188,7 +188,7 @@ void WebServer::handleClient(UniSocket sock, bool &closeFlag)
         try
         {
             sock.raw_recv(buf, BUFFER_LEN); // receiving message
-        } catch (UniSocketException& e)
+        } catch (UniSocketException &e)
         {
             LOG(e << " on sock # " << sock.getSockId());
             WebServer::logF << "Sock # " << sock.getSockId() << " had error of type: " << e.getError() << "\n";
@@ -196,19 +196,21 @@ void WebServer::handleClient(UniSocket sock, bool &closeFlag)
         }
         std::string request_string = buf; // stringify buffer
         LOG("New Request");
-        WebServer::logF << "REQUEST on sock # " << sock.getSockId() << ":\n" << request_string << "\n"; // logging request
+        WebServer::logF << "REQUEST on sock # " << sock.getSockId() << ":\n" << request_string
+                        << "\n"; // logging request
         request = parseRequest(request_string); // parsing request
         response = generateResponse(request); // generating response for request
         std::string response_str = response.str(); // getting string value of response
 
-        WebServer::logF << "RESPONSE on sock # " << sock.getSockId() << ":\n" << response.strHeaders() << "\n"; // logging response
+        WebServer::logF << "RESPONSE on sock # " << sock.getSockId() << ":\n" << response.strHeaders()
+                        << "\n"; // logging response
         LOG("TRYING TO GET " << request.path << " on sock # " << sock.getSockId());
 
         try
         {
             sock.raw_send(response_str.c_str(), response_str.length()); // sending response
         }
-        catch(UniSocketException& e)
+        catch (UniSocketException &e)
         {
             LOG(e << " on sock # " << sock.getSockId());
             WebServer::logF << "Sock # " << sock.getSockId() << " had error of type: " << e.getError() << "\n";
@@ -254,16 +256,16 @@ std::string WebServer::getContentType(const std::string &path)
     return HTTP_PLAIN;
 }
 
-void joinThreads(std::vector<std::thread>& vec)
+void joinThreads(std::vector<std::thread> &vec)
 {
-    for (auto& t : vec)
+    for (auto &t : vec)
     {
-        if(t.joinable())
+        if (t.joinable())
             t.join();
     }
 }
 
-void readCommands(WebServer* ws)
+void readCommands(WebServer *ws)
 {
     static std::string userInput;
     do
@@ -290,7 +292,7 @@ WebServer::WebServer(unsigned int listenPort)
     UniSocket current;
     while (!this->closeFlag) // while running
     {
-        if(existsInVector(set.getReadySockets(), serverSock))
+        if (existsInVector(set.getReadySockets(), serverSock))
         {
             try
             {
@@ -302,7 +304,8 @@ WebServer::WebServer(unsigned int listenPort)
             }
             current.setTimeout(TIMEOUT);
             LOG("New Client " << current.getSockId());
-            std::thread newThread = std::thread(handleClient, current, std::ref(closeFlag)); // start new thread for handling new client
+            std::thread newThread = std::thread(handleClient, current,
+                                                std::ref(closeFlag)); // start new thread for handling new client
             newThread.detach(); // detach thread
             allThreads.push_back(std::move(newThread)); // save thread
         }
