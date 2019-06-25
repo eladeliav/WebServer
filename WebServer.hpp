@@ -2,14 +2,14 @@
 // Created by Elad Eliav on 2019-05-27.
 //
 
-#ifndef WEBSERVER_VIPERSERVER_HPP
-#define WEBSERVER_VIPERSERVER_HPP
+#ifndef WEBSERVER_WEBSERVER_HPP
+#define WEBSERVER_WEBSERVER_HPP
 
 #include <string>
 #include <fstream>
 #include <UniSockets/UniSocket.hpp>
 
-class ViperServer
+class WebServer
 {
 public:
     struct http_request
@@ -36,7 +36,7 @@ public:
         std::string strHeaders();
     };
 
-    ViperServer(unsigned int listenPort);
+    WebServer(unsigned int listenPort);
 
     void shutdownServer();
 
@@ -48,7 +48,7 @@ private:
 
     static http_request parseRequest(const std::string& raw_req);
 
-    static ViperServer::http_response generateResponse(const http_request& req);
+    static WebServer::http_response generateResponse(const http_request& req);
 
     static std::string extractPath(const std::string &url);
 
@@ -69,4 +69,4 @@ private:
 };
 
 
-#endif //WEBSERVER_VIPERSERVER_HPP
+#endif //WEBSERVER_WEBSERVER_HPP

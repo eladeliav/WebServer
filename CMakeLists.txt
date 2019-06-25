@@ -4,8 +4,8 @@ project(WebServer)
 set(TARGET_NAME ${PROJECT_NAME})
 set(${TARGET_NAME}_SRC
         main.cpp
-        ViperServer.cpp
-        ViperServer.hpp
+        WebServer.cpp
+        WebServer.hpp
         )
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS "-std=c++11")

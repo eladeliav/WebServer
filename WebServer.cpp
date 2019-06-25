@@ -11,7 +11,7 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
-#include "ViperServer.hpp"
+#include "WebServer.hpp"
 
 #define GET "GET"
 #define POST "POST"
@@ -40,7 +40,7 @@ const std::map<std::vector<std::string>, std::string> TYPE_MAP = {
         {JSON_TYPES,  "application/json"}
 };
 
-std::ofstream ViperServer::logF = std::ofstream("log.log", std::ios::out);
+std::ofstream WebServer::logF = std::ofstream("log.log", std::ios::out);
 
 template<typename T>
 bool existsInVector(const std::vector<T> vec, T d)
@@ -48,7 +48,7 @@ bool existsInVector(const std::vector<T> vec, T d)
     return std::find(vec.begin(), vec.end(), d) != vec.end();
 }
 
-std::string ViperServer::extractPath(const std::string &url)
+std::string WebServer::extractPath(const std::string &url)
 {
     if (url.empty())
         return NO_PATH;
@@ -62,9 +62,9 @@ std::string ViperServer::extractPath(const std::string &url)
     return path;
 }
 
-ViperServer::http_response ViperServer::generateResponse(const ViperServer::http_request &req)
+WebServer::http_response WebServer::generateResponse(const WebServer::http_request &req)
 {
-    ViperServer::http_response response;
+    WebServer::http_response response;
     time_t ltime;
     time(&ltime);
     tm *gmt = gmtime(&ltime);
@@ -90,11 +90,11 @@ ViperServer::http_response ViperServer::generateResponse(const ViperServer::http
     return response;
 }
 
-ViperServer::http_request ViperServer::parseRequest(const std::string &raw_req)
+WebServer::http_request WebServer::parseRequest(const std::string &raw_req)
 {
     //TODO: throw exception instead
     if (raw_req.empty())
-        return ViperServer::http_request();
+        return WebServer::http_request();
 
     http_request request;
 
@@ -105,11 +105,11 @@ ViperServer::http_request ViperServer::parseRequest(const std::string &raw_req)
     {
         request.method = POST;
     } else //TODO: Throw exception instead
-        return ViperServer::http_request();
+        return WebServer::http_request();
 
     //TODO: make case for other methods
 
-    std::string path_to_file = ViperServer::extractPath(raw_req);
+    std::string path_to_file = WebServer::extractPath(raw_req);
 
     if (path_to_file == NO_PATH)
         path_to_file = DEFAULT_PATH;
@@ -119,7 +119,7 @@ ViperServer::http_request ViperServer::parseRequest(const std::string &raw_req)
     if (!validFile(path_to_file))
     {
         std::cout << "can't find: " << path_to_file << std::endl;
-        return ViperServer::http_request();
+        return WebServer::http_request();
     }
 
     std::string connectionLine = raw_req.substr(raw_req.find("Connection: ") + 12);
@@ -130,14 +130,14 @@ ViperServer::http_request ViperServer::parseRequest(const std::string &raw_req)
     return request;
 }
 
-std::string ViperServer::http_response::str()
+std::string WebServer::http_response::str()
 {
     std::string headers = strHeaders();
     headers += this->content;
     return headers;
 }
 
-std::string ViperServer::http_response::strHeaders()
+std::string WebServer::http_response::strHeaders()
 {
     std::stringstream response;
     response << this->version + " ";
@@ -154,10 +154,10 @@ std::string ViperServer::http_response::strHeaders()
     return response.str();
 }
 
-void ViperServer::handleClient(UniSocket sock)
+void WebServer::handleClient(UniSocket sock)
 {
-    ViperServer::http_request request; // request and response empty structs
-    ViperServer::http_response response;
+    WebServer::http_request request; // request and response empty structs
+    WebServer::http_response response;
     while (!request.close)
     {
         char buf[BUFFER_LEN] = {0}; // zeroing out a new buffer
@@ -167,17 +167,17 @@ void ViperServer::handleClient(UniSocket sock)
         } catch (UniSocketException& e)
         {
             LOG(e << " on sock # " << sock.getSockId());
-            ViperServer::logF << "Sock # " << sock.getSockId() << " had error of type: " << e.getError() << "\n";
+            WebServer::logF << "Sock # " << sock.getSockId() << " had error of type: " << e.getError() << "\n";
             break;
         }
         std::string request_string = buf;
         LOG("New Request");
-        ViperServer::logF << "REQUEST on sock # " << sock.getSockId() << ":\n" << request_string << "\n"; // logging request
+        WebServer::logF << "REQUEST on sock # " << sock.getSockId() << ":\n" << request_string << "\n"; // logging request
         request = parseRequest(request_string); // parsing request
         response = generateResponse(request); // generating response for request
         std::string response_str = response.str(); // getting string value of response
 
-        ViperServer::logF << "RESPONSE on sock # " << sock.getSockId() << ":\n" << response.strHeaders() << "\n"; // logging response
+        WebServer::logF << "RESPONSE on sock # " << sock.getSockId() << ":\n" << response.strHeaders() << "\n"; // logging response
         LOG("TRYING TO GET " << request.path << " on sock # " << sock.getSockId());
 
         try
@@ -187,21 +187,21 @@ void ViperServer::handleClient(UniSocket sock)
         catch(UniSocketException& e)
         {
             LOG(e << " on sock # " << sock.getSockId());
-            ViperServer::logF << "Sock # " << sock.getSockId() << " had error of type: " << e.getError() << "\n";
+            WebServer::logF << "Sock # " << sock.getSockId() << " had error of type: " << e.getError() << "\n";
             break;
         }
     }
     LOG("Closing connection on sock # " << sock.getSockId());
-    ViperServer::logF << "Closing socket # " << sock.getSockId() << "\n";
+    WebServer::logF << "Closing socket # " << sock.getSockId() << "\n";
     sock.close();
 }
 
-void ViperServer::shutdownServer()
+void WebServer::shutdownServer()
 {
     this->closeFlag = false;
 }
 
-bool ViperServer::getFileData(const std::string &path, std::string &response, int *size)
+bool WebServer::getFileData(const std::string &path, std::string &response, int *size)
 {
     std::ifstream t(path, std::ifstream::binary);
     static std::stringstream buffer;
@@ -215,12 +215,12 @@ bool ViperServer::getFileData(const std::string &path, std::string &response, in
     return true;
 }
 
-std::string ViperServer::getFileExtension(const std::string &path)
+std::string WebServer::getFileExtension(const std::string &path)
 {
     return path.substr(path.rfind('.') + 1, path.length());
 }
 
-std::string ViperServer::getContentType(const std::string &path)
+std::string WebServer::getContentType(const std::string &path)
 {
     std::string extension = getFileExtension(path);
     for (auto &pair : TYPE_MAP)
@@ -233,7 +233,7 @@ std::string ViperServer::getContentType(const std::string &path)
     return HTTP_PLAIN;
 }
 
-ViperServer::ViperServer(unsigned int listenPort)
+WebServer::WebServer(unsigned int listenPort)
 {
     UniSocket serverSock(listenPort, SOMAXCONN); // declaring listening socket
     LOG("Listening for connections on port: " << listenPort);

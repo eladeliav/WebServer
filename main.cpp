@@ -1,11 +1,11 @@
 #include <iostream>
-#include "ViperServer.hpp"
+#include "WebServer.hpp"
 
 int main()
 {
     try
     {
-        ViperServer webServer(7777);
+        WebServer webServer(7777);
     } catch (UniSocketException &e)
     {
         std::cout << e << std::endl;
