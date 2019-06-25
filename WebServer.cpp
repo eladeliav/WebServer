@@ -59,6 +59,14 @@ bool existsInVector(const std::vector<T> vec, T d)
     return std::find(vec.begin(), vec.end(), d) != vec.end();
 }
 
+void WebServer::shutdownServer()
+{
+    this->closeFlag = true;
+    serverSock.close();
+    UniSocket::cleanup();
+    exit(0);
+}
+
 std::string WebServer::extractPath(const std::string &url)
 {
     if (url.empty())
@@ -173,11 +181,11 @@ std::string WebServer::http_response::strHeaders()
 }
 
 // handle a single client
-void WebServer::handleClient(UniSocket sock)
+void WebServer::handleClient(UniSocket sock, bool &closeFlag)
 {
     WebServer::http_request request; // request and response empty structs
     WebServer::http_response response;
-    while (!request.close) // while the connection close flag is off
+    while (!request.close && !closeFlag) // while the connection close flag is off
     {
         char buf[BUFFER_LEN] = {0}; // zeroing out a new buffer
         try
@@ -216,11 +224,6 @@ void WebServer::handleClient(UniSocket sock)
     sock.close();
 }
 
-void WebServer::shutdownServer()
-{
-    this->closeFlag = false;
-}
-
 bool WebServer::getFileData(const std::string &path, std::string &response, int *size)
 {
     std::ifstream t(path, std::ifstream::binary); // open file
@@ -254,9 +257,27 @@ std::string WebServer::getContentType(const std::string &path)
     return HTTP_PLAIN;
 }
 
+void readCommands(WebServer* ws)
+{
+    static std::string userInput;
+    do
+    {
+        std::cout << "> ";
+        std::cin >> std::ws;
+        std::getline(std::cin, userInput, '\n');
+        if (userInput == "QUIT")
+        {
+            LOG("RECEIVED QUIT COMMAND");
+            ws->shutdownServer();
+        }
+    } while (userInput != "QUIT");
+}
+
 WebServer::WebServer(unsigned int listenPort)
 {
-    UniSocket serverSock(listenPort, SOMAXCONN, TIMEOUT); // declaring listening socket
+    serverSock = UniSocket(listenPort, SOMAXCONN, TIMEOUT); // declaring listening socket
+    std::thread commandsThread(readCommands, this);
+    commandsThread.detach();
     LOG("Listening for connections on port: " << listenPort);
     LOG("Running on: http://localhost:" << listenPort);
     std::vector<std::thread> allThreads; // empty vector for threads
@@ -273,11 +294,9 @@ WebServer::WebServer(unsigned int listenPort)
         }
         current.setTimeout(TIMEOUT);
         LOG("New Client " << current.getSockId());
-        std::thread newThread = std::thread(handleClient, current); // start new thread for handling new client
+        std::thread newThread = std::thread(handleClient, current, std::ref(closeFlag)); // start new thread for handling new client
         newThread.detach(); // detach thread
         allThreads.push_back(std::move(newThread)); // save thread
-        //handleClient(current);
     }
-    current.close();
     serverSock.close();
 }

@@ -36,15 +36,15 @@ public:
         std::string strHeaders();
     };
 
-    WebServer(unsigned int listenPort);
+    explicit WebServer(unsigned int listenPort);
 
     void shutdownServer();
 
 private:
 
-    static void handleClient(UniSocket sock);
+    static void handleClient(UniSocket sock, bool &closeFlag);
 
-    bool closeFlag = false;
+
 
     static http_request parseRequest(const std::string& raw_req);
 
@@ -63,8 +63,10 @@ private:
         std::ifstream f(name.c_str());
         return f.good();
     }
-
+private:
     static std::ofstream logF;
+    bool closeFlag = false;
+    UniSocket serverSock;
 
 };
 
