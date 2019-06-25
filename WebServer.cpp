@@ -62,9 +62,6 @@ bool existsInVector(const std::vector<T> vec, T d)
 void WebServer::shutdownServer()
 {
     this->closeFlag = true;
-    serverSock.close();
-    UniSocket::cleanup();
-    exit(0);
 }
 
 std::string WebServer::extractPath(const std::string &url)
@@ -257,17 +254,25 @@ std::string WebServer::getContentType(const std::string &path)
     return HTTP_PLAIN;
 }
 
+void joinThreads(std::vector<std::thread>& vec)
+{
+    for (auto& t : vec)
+    {
+        if(t.joinable())
+            t.join();
+    }
+}
+
 void readCommands(WebServer* ws)
 {
     static std::string userInput;
     do
     {
-        std::cout << "> ";
         std::cin >> std::ws;
         std::getline(std::cin, userInput, '\n');
-        if (userInput == "QUIT")
+        if (userInput == "quit")
         {
-            LOG("RECEIVED QUIT COMMAND");
+            LOG("SHUTTING DOWN");
             ws->shutdownServer();
         }
     } while (userInput != "QUIT");
@@ -281,22 +286,28 @@ WebServer::WebServer(unsigned int listenPort)
     LOG("Listening for connections on port: " << listenPort);
     LOG("Running on: http://localhost:" << listenPort);
     std::vector<std::thread> allThreads; // empty vector for threads
+    UniSocketSet set(serverSock);
     UniSocket current;
     while (!this->closeFlag) // while running
     {
-        try
+        if(existsInVector(set.getReadySockets(), serverSock))
         {
-            current = serverSock.accept(); // use current to save new accepted socket
-        } catch (UniSocketException &e)
-        {
-            std::cout << e << std::endl;
-            break;
+            try
+            {
+                current = serverSock.accept(); // use current to save new accepted socket
+            } catch (UniSocketException &e)
+            {
+                std::cout << e << std::endl;
+                break;
+            }
+            current.setTimeout(TIMEOUT);
+            LOG("New Client " << current.getSockId());
+            std::thread newThread = std::thread(handleClient, current, std::ref(closeFlag)); // start new thread for handling new client
+            newThread.detach(); // detach thread
+            allThreads.push_back(std::move(newThread)); // save thread
         }
-        current.setTimeout(TIMEOUT);
-        LOG("New Client " << current.getSockId());
-        std::thread newThread = std::thread(handleClient, current, std::ref(closeFlag)); // start new thread for handling new client
-        newThread.detach(); // detach thread
-        allThreads.push_back(std::move(newThread)); // save thread
     }
     serverSock.close();
+    joinThreads(allThreads);
+    UniSocket::cleanup();
 }

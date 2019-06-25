@@ -3,5 +3,13 @@
 
 int main()
 {
-    WebServer webServer(7777);
+    try
+    {
+        WebServer webServer(80);
+    }catch(UniSocketException& e)
+    {
+        std:: cout << e << std::endl;
+    }
+
+
 }
