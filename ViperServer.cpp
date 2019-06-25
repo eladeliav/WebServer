@@ -159,36 +159,43 @@ std::string ViperServer::http_response::strHeaders()
 
 void ViperServer::handleClient(UniSocket sock)
 {
-    ViperServer::http_request request;
-    request.close = false;
+    ViperServer::http_request request; // request and response empty structs
     ViperServer::http_response response;
     while (!request.close)
     {
-        char buf[BUFFER_LEN] = {0};
+        char buf[BUFFER_LEN] = {0}; // zeroing out a new buffer
         try
         {
-            sock.raw_recv(buf, BUFFER_LEN);
-        } catch (UniSocketException &e)
+            sock.raw_recv(buf, BUFFER_LEN); // receiving message
+        } catch (UniSocketException& e)
         {
             LOG(e << " on sock # " << sock.getSockId());
+            ViperServer::logF << "Sock # " << sock.getSockId() << " had error of type: " << e.getError() << "\n";
             break;
         }
         string request_string = buf;
         LOG("New Request");
-        ViperServer::logF << "REQUEST:\n" << request_string << "\n";
-        request = parseRequest(request_string);
-        response = generateResponse(request);
-        std::string response_str = response.str();
+        ViperServer::logF << "REQUEST on sock # " << sock.getSockId() << ":\n" << request_string << "\n"; // logging request
+        request = parseRequest(request_string); // parsing request
+        response = generateResponse(request); // generating response for request
+        std::string response_str = response.str(); // getting string value of response
 
-        ViperServer::logF << "RESPONSE:\n" << response.strHeaders() << "\n";
+        ViperServer::logF << "RESPONSE on sock # " << sock.getSockId() << ":\n" << response.strHeaders() << "\n"; // logging response
         LOG("TRYING TO GET " << request.path << " on sock # " << sock.getSockId());
-        if (sock.raw_send(response_str.c_str(), response_str.length()) <= 0)
+
+        try
         {
-            std::cout << "had send error" << std::endl;
+            sock.raw_send(response_str.c_str(), response_str.length()); // sending response
+        }
+        catch(UniSocketException& e)
+        {
+            LOG(e << " on sock # " << sock.getSockId());
+            ViperServer::logF << "Sock # " << sock.getSockId() << " had error of type: " << e.getError() << "\n";
             break;
         }
     }
     LOG("Closing connection on sock # " << sock.getSockId());
+    ViperServer::logF << "Closing socket # " << sock.getSockId() << "\n";
     sock.close();
 }
 
@@ -247,9 +254,9 @@ ViperServer::ViperServer(unsigned int listenPort)
             break;
         }
         LOG("New Client " << current.getSockId());
-        std::thread newThread = std::thread(handleClient, current);
-        newThread.detach();
-        allThreads.push_back(std::move(newThread));
+        std::thread newThread = std::thread(handleClient, current); // start new thread for handling new client
+        newThread.detach(); // detach thread
+        allThreads.push_back(std::move(newThread)); // save thread
         //handleClient(current);
     }
     current.close();
