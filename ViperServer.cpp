@@ -24,18 +24,15 @@
 #define VERSION "HTTP/1.1"
 #define SERVER_NAME "Viper WebServer V1.0"
 
-using std::string;
-using std::vector;
-
 #define BUFFER_LEN 2048
 
-static const vector<string> TEXT_TYPES = {"html", "txt", "php"};
-static const vector<string> IMAGE_TYPES = {"jpg", "ico", "gif", "png", "jfif", "svg"};
-static const vector<string> JS_TYPES = {"js"};
-static const vector<string> JSON_TYPES = {"json", "map"};
-static const vector<string> CSS_TYPES = {"css", "sass"};
+const std::vector<std::string> TEXT_TYPES = {"html", "txt", "php"};
+const std::vector<std::string> IMAGE_TYPES = {"jpg", "ico", "gif", "png", "jfif", "svg"};
+const std::vector<std::string> JS_TYPES = {"js"};
+const std::vector<std::string> JSON_TYPES = {"json", "map"};
+const std::vector<std::string> CSS_TYPES = {"css", "sass"};
 
-static const std::map<vector<string>, string> TYPE_MAP = {
+const std::map<std::vector<std::string>, std::string> TYPE_MAP = {
         {TEXT_TYPES,  "text/html; charset=utf-8"},
         {IMAGE_TYPES, "image/jpeg"},
         {JS_TYPES,    "application/javascript"},
@@ -46,7 +43,7 @@ static const std::map<vector<string>, string> TYPE_MAP = {
 std::ofstream ViperServer::logF = std::ofstream("log.log", std::ios::out);
 
 template<typename T>
-bool existsInVector(const vector<T> vec, T d)
+bool existsInVector(const std::vector<T> vec, T d)
 {
     return std::find(vec.begin(), vec.end(), d) != vec.end();
 }
@@ -173,7 +170,7 @@ void ViperServer::handleClient(UniSocket sock)
             ViperServer::logF << "Sock # " << sock.getSockId() << " had error of type: " << e.getError() << "\n";
             break;
         }
-        string request_string = buf;
+        std::string request_string = buf;
         LOG("New Request");
         ViperServer::logF << "REQUEST on sock # " << sock.getSockId() << ":\n" << request_string << "\n"; // logging request
         request = parseRequest(request_string); // parsing request
@@ -204,7 +201,7 @@ void ViperServer::shutdownServer()
     this->closeFlag = false;
 }
 
-bool ViperServer::getFileData(const std::string &path, string &response, int *size)
+bool ViperServer::getFileData(const std::string &path, std::string &response, int *size)
 {
     std::ifstream t(path, std::ifstream::binary);
     static std::stringstream buffer;
@@ -225,7 +222,7 @@ std::string ViperServer::getFileExtension(const std::string &path)
 
 std::string ViperServer::getContentType(const std::string &path)
 {
-    string extension = getFileExtension(path);
+    std::string extension = getFileExtension(path);
     for (auto &pair : TYPE_MAP)
     {
         if (existsInVector(pair.first, extension))
