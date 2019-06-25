@@ -23,6 +23,7 @@
 #define LOG(x) std::cout << x << std::endl
 #define VERSION "HTTP/1.1"
 #define SERVER_NAME "Viper WebServer V1.0"
+#define TIMEOUT 1
 
 #define BUFFER_LEN 2048
 
@@ -255,7 +256,7 @@ std::string WebServer::getContentType(const std::string &path)
 
 WebServer::WebServer(unsigned int listenPort)
 {
-    UniSocket serverSock(listenPort, SOMAXCONN, 3); // declaring listening socket
+    UniSocket serverSock(listenPort, SOMAXCONN, TIMEOUT); // declaring listening socket
     LOG("Listening for connections on port: " << listenPort);
     LOG("Running on: http://localhost:" << listenPort);
     std::vector<std::thread> allThreads; // empty vector for threads
@@ -270,7 +271,7 @@ WebServer::WebServer(unsigned int listenPort)
             std::cout << e << std::endl;
             break;
         }
-        current.setTimeout(3);
+        current.setTimeout(TIMEOUT);
         LOG("New Client " << current.getSockId());
         std::thread newThread = std::thread(handleClient, current); // start new thread for handling new client
         newThread.detach(); // detach thread
