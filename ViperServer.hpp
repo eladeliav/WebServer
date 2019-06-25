@@ -31,6 +31,7 @@ public:
         std::string content;
         bool close;
         std::string str();
+        std::string strHeaders();
     };
 
     ViperServer(unsigned int listenPort);

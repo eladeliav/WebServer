@@ -79,11 +79,12 @@ ViperServer::http_response ViperServer::generateResponse(const ViperServer::http
     response.version = VERSION;
     response.server = SERVER_NAME;
     response.close = req.close;
+    response.status = "200 OK";
 
-    LOG("TRYING TO GET " << req.path);
     if (!getFileData(req.path, response.content, &response.content_length))
     {
         std::cout << "Couldn't get file data" << std::endl;
+        response.status = "404 Not Found";
         response.content = "Couldn't get file data";
         response.content_length = response.content.length();
         response.content_type = HTTP_PLAIN;
@@ -134,23 +135,34 @@ ViperServer::http_request ViperServer::parseRequest(const std::string &raw_req)
 
 std::string ViperServer::http_response::str()
 {
+    std::string headers = strHeaders();
+    headers += this->content;
+    return headers;
+}
+
+std::string ViperServer::http_response::strHeaders()
+{
     std::stringstream response;
-    response << this->version;
+    response << this->version + " ";
     response << this->status + NEW_LINE;
     response << std::string("Date: ") + this->date + NEW_LINE;
     response << std::string("Server: ") + this->server + NEW_LINE;
     if (this->close)
         response << std::string("Connection: Close") + NEW_LINE;
+    else
+        response << std::string("Connection: keep-alive") + NEW_LINE;
     response << "Content-Type: " + this->content_type + NEW_LINE;
     response << "Content-Length: " + std::to_string(this->content_length) + NEW_LINE + NEW_LINE;
-    response << this->content;
 
     return response.str();
 }
 
 void ViperServer::handleClient(UniSocket sock)
 {
-    while (true)
+    ViperServer::http_request request;
+    request.close = false;
+    ViperServer::http_response response;
+    while (!request.close)
     {
         char buf[BUFFER_LEN] = {0};
         try
@@ -158,56 +170,31 @@ void ViperServer::handleClient(UniSocket sock)
             sock.raw_recv(buf, BUFFER_LEN);
         } catch (UniSocketException &e)
         {
-            std::cout << e << std::endl;
+            LOG(e << " on sock # " << sock.getSockId());
             break;
         }
         string request_string = buf;
         LOG("New Request");
         ViperServer::logF << "REQUEST:\n" << request_string << "\n";
-        ViperServer::http_request request = parseRequest(request_string);
-        ViperServer::http_response response = generateResponse(request);
+        request = parseRequest(request_string);
+        response = generateResponse(request);
         std::string response_str = response.str();
 
-        ViperServer::logF << "RESPONSE:\n" << response_str << "\n";
+        ViperServer::logF << "RESPONSE:\n" << response.strHeaders() << "\n";
+        LOG("TRYING TO GET " << request.path << " on sock # " << sock.getSockId());
         if (sock.raw_send(response_str.c_str(), response_str.length()) <= 0)
         {
             std::cout << "had send error" << std::endl;
             break;
         }
     }
-    //sock.close();
-    LOG("Closing connection");
+    LOG("Closing connection on sock # " << sock.getSockId());
+    sock.close();
 }
 
 void ViperServer::shutdownServer()
 {
     this->closeFlag = false;
-}
-
-ViperServer::ViperServer(unsigned int listenPort)
-{
-    UniSocket serverSock(listenPort, SOMAXCONN); // declaring listening socket
-    LOG("Listening for connections on port: " << listenPort);
-    LOG("Running on: http://localhost:" << listenPort);
-    std::vector<std::thread> allThreads; // empty vector for threads
-    while (!this->closeFlag) // while running
-    {
-        UniSocket current;
-        try
-        {
-            current = serverSock.accept(); // use current to save new accepted socket
-        } catch (UniSocketException &e)
-        {
-            std::cout << e << std::endl;
-            continue;
-        }
-        LOG("New Client");
-        std::thread newThread = std::thread(handleClient, current);
-        newThread.detach();
-        allThreads.push_back(std::move(newThread));
-        //handleClient(current);
-    }
-    serverSock.close();
 }
 
 bool ViperServer::getFileData(const std::string &path, string &response, int *size)
@@ -240,4 +227,31 @@ std::string ViperServer::getContentType(const std::string &path)
         }
     }
     return HTTP_PLAIN;
+}
+
+ViperServer::ViperServer(unsigned int listenPort)
+{
+    UniSocket serverSock(listenPort, SOMAXCONN); // declaring listening socket
+    LOG("Listening for connections on port: " << listenPort);
+    LOG("Running on: http://localhost:" << listenPort);
+    std::vector<std::thread> allThreads; // empty vector for threads
+    UniSocket current;
+    while (!this->closeFlag) // while running
+    {
+        try
+        {
+            current = serverSock.accept(); // use current to save new accepted socket
+        } catch (UniSocketException &e)
+        {
+            std::cout << e << std::endl;
+            break;
+        }
+        LOG("New Client " << current.getSockId());
+        std::thread newThread = std::thread(handleClient, current);
+        newThread.detach();
+        allThreads.push_back(std::move(newThread));
+        //handleClient(current);
+    }
+    current.close();
+    serverSock.close();
 }

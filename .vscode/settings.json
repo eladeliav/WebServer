@@ -1,3 +1,4 @@
 {
-    "C_Cpp.default.configurationProvider": "go2sh.cmake-integration"
+    "C_Cpp.default.configurationProvider": "go2sh.cmake-integration",
+    "python.pythonPath": "C:\\Users\\elade\\Miniconda3\\envs\\school\\python.exe"
 }
