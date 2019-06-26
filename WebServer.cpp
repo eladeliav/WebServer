@@ -308,6 +308,7 @@ WebServer::WebServer(unsigned int listenPort)
         }
         current.setTimeout(TIMEOUT);
         LOG("New Client " << current.getSockId());
+        WebServer::logF << "New Client: " << current.getSockId() << "\n";
         std::thread newThread = std::thread(handleClient, current, std::ref(closeFlag)); // start new thread for handling new client
         newThread.detach(); // detach thread
         allThreads.push_back(std::move(newThread)); // save thread
