@@ -8,7 +8,6 @@
 #include <string>
 #include <fstream>
 #include <UniSockets/UniSocket.hpp>
-#include <UniSockets/UniSocketSet.hpp>
 
 class WebServer
 {

@@ -18,8 +18,13 @@
 #define NEW_LINE "\r\n"
 #define NO_PATH "/"
 #define HTTP_PLAIN "text/html"
+#ifdef _WIN32
 #define WEBROOT_PATH "D:\\Programming\\Websites\\elastic-search-viewer\\build"
 #define DEFAULT_PATH "D:\\Programming\\Websites\\elastic-search-viewer\\build\\index.html"
+#else
+#define WEBROOT_PATH "/media/elad/New Volume/Programming/Websites/elastic-search-viewer/build"
+#define DEFAULT_PATH "//media/elad/New Volume/Programming/Websites/elastic-search-viewer/build/index.html"
+#endif
 #define LOG(x) (std::cout << x << std::endl)
 #define VERSION "HTTP/1.1"
 #define SERVER_NAME "Viper WebServer V1.0"
@@ -288,27 +293,24 @@ WebServer::WebServer(unsigned int listenPort)
     LOG("Listening for connections on port: " << listenPort);
     LOG("Running on: http://localhost:" << listenPort);
     std::vector<std::thread> allThreads; // empty vector for threads
-    UniSocketSet set(serverSock);
     UniSocket current;
     while (!this->closeFlag) // while running
     {
-        if (existsInVector(set.getReadySockets(), serverSock))
+        try
         {
-            try
-            {
-                current = serverSock.accept(); // use current to save new accepted socket
-            } catch (UniSocketException &e)
-            {
-                std::cout << e << std::endl;
-                break;
-            }
-            current.setTimeout(TIMEOUT);
-            LOG("New Client " << current.getSockId());
-            std::thread newThread = std::thread(handleClient, current,
-                                                std::ref(closeFlag)); // start new thread for handling new client
-            newThread.detach(); // detach thread
-            allThreads.push_back(std::move(newThread)); // save thread
+            current = serverSock.acceptIntervals(); // use current to save new accepted socket
+        } catch (UniSocketException &e)
+        {
+            if(e.getErrorType() == UniSocketException::TIMED_OUT)
+                continue;
+            std::cout << e << std::endl;
+            break;
         }
+        current.setTimeout(TIMEOUT);
+        LOG("New Client " << current.getSockId());
+        std::thread newThread = std::thread(handleClient, current, std::ref(closeFlag)); // start new thread for handling new client
+        newThread.detach(); // detach thread
+        allThreads.push_back(std::move(newThread)); // save thread
     }
     serverSock.close();
     joinThreads(allThreads);

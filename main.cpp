@@ -8,7 +8,7 @@ int main()
 {
     try
     {
-        WebServer webServer(80);
+        WebServer webServer(7777);
     } catch (UniSocketException &e)
     {
         std::cout << e << std::endl;
