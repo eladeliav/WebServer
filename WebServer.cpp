@@ -23,7 +23,7 @@
 #define DEFAULT_PATH "D:\\Programming\\Websites\\elastic-search-viewer\\build\\index.html"
 #else
 #define WEBROOT_PATH "/media/elad/New Volume/Programming/Websites/elastic-search-viewer/build"
-#define DEFAULT_PATH "//media/elad/New Volume/Programming/Websites/elastic-search-viewer/build/index.html"
+#define DEFAULT_PATH std::string(WEBROOT_PATH) + "/index.html"
 #endif
 #define LOG(x) (std::cout << x << std::endl)
 #define VERSION "HTTP/1.1"
