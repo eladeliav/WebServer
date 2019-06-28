@@ -7,7 +7,7 @@
 
 #include <string>
 #include <fstream>
-#include <UniSockets/UniSocket.hpp>
+#include <UniSockets/Core.hpp>
 
 class WebServer
 {
@@ -72,7 +72,7 @@ private:
 private:
     static std::ofstream logF;
     bool closeFlag = false;
-    UniSocket serverSock;
+    UniServerSocket serverSock;
 
 };
 

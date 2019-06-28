@@ -28,7 +28,7 @@
 #define LOG(x) (std::cout << x << std::endl)
 #define VERSION "HTTP/1.1"
 #define SERVER_NAME "Viper WebServer V1.0"
-#define TIMEOUT 1
+#define TIMEOUT 3
 
 #define BUFFER_LEN 2048
 
@@ -287,7 +287,7 @@ void readCommands(WebServer *ws)
 
 WebServer::WebServer(unsigned int listenPort)
 {
-    serverSock = UniSocket(listenPort, SOMAXCONN, TIMEOUT); // declaring listening socket
+    serverSock = UniServerSocket(listenPort, SOMAXCONN, TIMEOUT); // declaring listening socket
     std::thread commandsThread(readCommands, this);
     commandsThread.detach();
     LOG("Listening for connections on port: " << listenPort);
