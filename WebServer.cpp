@@ -28,7 +28,7 @@
 #define LOG(x) (std::cout << x << std::endl)
 #define VERSION "HTTP/1.1"
 #define SERVER_NAME "Viper WebServer V1.0"
-#define TIMEOUT 3
+#define TIMEOUT 1
 
 #define BUFFER_LEN 2048
 
