@@ -21,6 +21,9 @@
 #ifdef _WIN32
 #define WEBROOT_PATH "D:\\Programming\\Websites\\elastic-search-viewer\\build"
 #define DEFAULT_PATH "D:\\Programming\\Websites\\elastic-search-viewer\\build\\index.html"
+#elif __APPLE__
+#define WEBROOT_PATH "/Users/eladeliav/Documents/Programming/ElasticSearch-DB-Viewer/build"
+#define DEFAULT_PATH std::string(WEBROOT_PATH) + "/index.html"
 #else
 #define WEBROOT_PATH "/media/elad/New Volume/Programming/Websites/elastic-search-viewer/build"
 #define DEFAULT_PATH std::string(WEBROOT_PATH) + "/index.html"
